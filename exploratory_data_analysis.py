@@ -133,12 +133,13 @@ plt.savefig('ChronicIllness.png')
 
 ###Plot 7: Alcohol use vs average life expectancy
 bins = [0, 1, 2, 3, 5, 10, 20]
+
 alcoholUse["Alcohol Consumption"] = pd.cut(alcoholUse["Total alcohol consumption per capita (liters of pure alcohol, projected estimates, 15+ years of age)"],
                                             bins,labels=['0 to 1', '1 to 2', '2 to 3', "3 to 5", "5 to 10", "10 to 20"])
 
-alcoholUse = alcoholUse.groupby(["Alcohol Consumption"],as_index=False).mean("Life expectancy at birth, total (years)")
+alcoholUseBinned = alcoholUse.groupby(["Alcohol Consumption"],as_index=False).mean("Life expectancy at birth, total (years)")
 
-plt.bar(x = alcoholUse["Alcohol Consumption"], height = alcoholUse["Life expectancy at birth, total (years)"] )
+plt.bar(x = alcoholUseBinned["Alcohol Consumption"], height = alcoholUseBinned["Life expectancy at birth, total (years)"] )
 #Format plot
 plt.xlabel("Average Consumption (Liters per Capita)")
 plt.ylabel("Average Life Expectancy")
