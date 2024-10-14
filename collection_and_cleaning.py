@@ -337,3 +337,46 @@ economicCost = keyYears[['Country Name',
 #Remove from data frame
 economicCost = economicCost.dropna()
 #Leaves 728 records
+
+
+#Drop Repeated Life Expectancy from tables, beside seed alcoholUse
+chronicIllness = chronicIllness.drop(columns=['Life expectancy at birth, total (years)'])
+publicHealth = publicHealth.drop(columns=['Life expectancy at birth, total (years)'])
+economicCost = economicCost.drop(columns=['Life expectancy at birth, total (years)'])
+alcoholUse = alcoholUse.drop(columns=['Alcohol Consumption'])
+
+#Merge Tables
+masterData = pd.merge(alcoholUse, chronicIllness, on=['Country Name','Year'])
+print(masterData.shape)
+masterData = pd.merge(masterData, publicHealth, on=['Country Name','Year'])
+print(masterData.shape)
+masterData = pd.merge(masterData, economicCost, on=['Country Name','Year'])
+print(masterData.shape)
+
+masterData = masterData.dropna()
+#filter Year to 2000 or 2020
+masterData = masterData[(masterData["Year"] == "2000")|(masterData["Year"] == "2020")]
+
+#filter rows with country name count less than 2
+masterData = masterData.groupby(masterData["Country Name"]).filter(lambda x: len(x) > 1)
+
+#Find difference in country stats between 2000 and 2020
+masterDataReduce = masterData.drop(columns=['Year'])
+masterDataReduce = masterDataReduce.groupby(by = ['Country Name'])
+masterDataReduce = masterDataReduce.diff().dropna()
+masterDataReduce = masterDataReduce.join(masterData["Country Name"])
+masterDataReduce = masterDataReduce[masterDataReduce.columns[-1:].tolist() + masterDataReduce.columns[:-1].tolist()]
+
+#Merge income level into table
+incomeGroupsReduced = incomeGroups[["Country Name","Income Level"]]
+incomeGroupsReduced = incomeGroupsReduced.drop_duplicates(subset=['Country Name'])
+masterDataReduce = pd.merge(masterDataReduce, incomeGroupsReduced, on = ['Country Name'])
+
+#Group lifeexpetancies into categories
+bins = [-5, 0, 3, 10, 25]
+
+masterDataReduce["Life expectancy change groups"] = pd.cut(masterDataReduce["Life expectancy at birth, total (years)"],
+                                            bins,labels=['Negative Change', 'Low Change', 'Moderate Change', "High Change"])
+
+
+masterDataReduce.to_csv('HNP_CountryProgress2000_2020.csv', index=False)
